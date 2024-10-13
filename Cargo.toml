@@ -1,0 +1,17 @@
+[package]
+name = "main-feature-service"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = "4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+env_logger = "0.10"  # Tambahkan ini
+dotenv = "0.15"  # Tambahkan ini
+
+# Tambahkan dependensi SQLx
+sqlx = { version = "0.7", features = ["postgres", "runtime-actix-native-tls", "macros"] }
+
+# (Opsional) Untuk menggunakan migrations
+sqlx-cli = { version = "0.7", features = ["postgres"] }
