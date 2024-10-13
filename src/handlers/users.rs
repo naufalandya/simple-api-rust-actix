@@ -10,13 +10,16 @@ use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm};
 
 fn decode_jwt(token: &str) -> Result<Claims, actix_web::Error> {
     let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-    println!("{}", secret);
-    println!("{}", token);
-    let validation = Validation::new(Algorithm::HS512);  // Use HS512 directly
+    println!("Secret: {}", secret);  
+    println!("Token: {}", token);    
 
+    let validation = Validation::new(Algorithm::HS512);  
     match decode::<Claims>(&token, &DecodingKey::from_secret(secret.as_ref()), &validation) {
         Ok(token_data) => Ok(token_data.claims),
-        Err(_) => Err(actix_web::error::ErrorUnauthorized("Invalid token")),
+        Err(e) => {
+            println!("Error: {:?}", e); 
+            Err(actix_web::error::ErrorUnauthorized("Invalid token"))
+        },
     }
 }
 
