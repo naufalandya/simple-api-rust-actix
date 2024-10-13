@@ -1,9 +1,25 @@
 // src/handlers/users.rs
 
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse, Responder, HttpRequest};
 use sqlx::PgPool;
 
-use crate::models::user::{UserResponse, CreateUser};
+use crate::models::user::{UserResponse, CreateUser, Claims};
+
+use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm};
+
+
+fn decode_jwt(token: &str) -> Result<Claims, actix_web::Error> {
+    let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    println!("{}", secret);
+    println!("{}", token);
+    let validation = Validation::new(Algorithm::HS512);  // Use HS512 directly
+
+    match decode::<Claims>(&token, &DecodingKey::from_secret(secret.as_ref()), &validation) {
+        Ok(token_data) => Ok(token_data.claims),
+        Err(_) => Err(actix_web::error::ErrorUnauthorized("Invalid token")),
+    }
+}
+
 
 pub async fn create_user(
     pool: web::Data<PgPool>,
@@ -61,4 +77,28 @@ pub async fn get_user(
             HttpResponse::InternalServerError().body("Gagal mengambil user")
         }
     }
+}
+
+pub async fn whoami(req: HttpRequest) -> impl Responder {
+    // Get the Authorization header
+    if let Some(auth_header) = req.headers().get("Authorization") {
+        if let Ok(auth_str) = auth_header.to_str() {
+            if auth_str.starts_with("Bearer ") {
+                let token = auth_str.trim_start_matches("Bearer ");
+
+                // Decode the JWT
+                match decode_jwt(token) {
+                    Ok(claims) => {
+                        // Return the user info from the JWT claims
+                        return HttpResponse::Ok().json(serde_json::json!({
+                            "user_id": claims.sub,
+                            "username": claims.username
+                        }));
+                    }
+                    Err(_) => return HttpResponse::Unauthorized().body("Invalid token"),
+                }
+            }
+        }
+    }
+    HttpResponse::Unauthorized().body("Missing or invalid Authorization header")
 }

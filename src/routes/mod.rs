@@ -5,7 +5,7 @@ use actix_web::web;
 use crate::handlers::{
     greet::greet,
     search::search,
-    users::{create_user, get_user},
+    users::{create_user, get_user, whoami},
     error::custom_response,
 };
 
@@ -24,5 +24,8 @@ pub fn init_routes(cfg: &mut web::ServiceConfig) {
         .route("/users/{id}", web::get().to(get_user))
         
         // Route untuk mengembalikan text dengan status code khusus
-        .route("/error", web::get().to(custom_response));
+        .route("/error", web::get().to(custom_response))
+
+        .route("/who-i-am", web::get().to(whoami)); // New route for whoami
+
 }
