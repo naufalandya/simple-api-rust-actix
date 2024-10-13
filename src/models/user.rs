@@ -2,11 +2,11 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
-pub struct Info {
-    pub name: String,
-    pub age: u8,
-}
+// #[derive(Deserialize)]
+// pub struct Info {
+//     pub name: String,
+//     pub age: u8,
+// }
 
 #[derive(Serialize)]
 pub struct UserResponse {
@@ -14,13 +14,15 @@ pub struct UserResponse {
     pub status: u16,
 }
 
-#[derive(Deserialize)]
+// src/models/user.rs
+#[derive(serde::Deserialize)]
 pub struct CreateUser {
     pub name: String,
-    pub age: u8,
+    pub age: i32, // Change this to i32
 }
 
-#[derive(Deserialize)]
-pub struct GetUser {
-    pub id: i32,
-}
+
+// #[derive(Deserialize)]
+// pub struct GetUser {
+//     pub id: i32,
+// }

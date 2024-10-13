@@ -1,10 +1,9 @@
 // src/handlers/users.rs
 
 use actix_web::{web, HttpResponse, Responder};
-use serde::Deserialize;
 use sqlx::PgPool;
 
-use crate::models::user::{Info, UserResponse, CreateUser, GetUser};
+use crate::models::user::{UserResponse, CreateUser};
 
 pub async fn create_user(
     pool: web::Data<PgPool>,
@@ -12,7 +11,7 @@ pub async fn create_user(
 ) -> impl Responder {
     // Insert user ke database
     let result = sqlx::query!(
-        "INSERT INTO users (name, age) VALUES ($1, $2) RETURNING id",
+        "INSERT INTO public.users (name, age) VALUES ($1, $2) RETURNING id",
         info.name,
         info.age
     )
@@ -41,7 +40,7 @@ pub async fn get_user(
     let user_id = path.into_inner();
 
     let result = sqlx::query!(
-        "SELECT id, name, age FROM users WHERE id = $1",
+        "SELECT id, name, age FROM public.users WHERE id = $1",
         user_id
     )
     .fetch_optional(pool.get_ref())
