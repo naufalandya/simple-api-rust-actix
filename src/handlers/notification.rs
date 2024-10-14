@@ -11,12 +11,10 @@ pub async fn get_notification_history(
 ) -> impl Responder {
     println!("Request Extensions: {:?}", req.extensions());
 
-    // Attempt to retrieve user_id from request extensions
     match req.extensions().get::<i32>() {
         Some(user_id) => {
             println!("Extracted user_id: {:?}", user_id);
 
-            // Fetch like and comment notifications concurrently
             let notifications_future = future::try_join(
                 sqlx::query_as!(
                     LikeNotification,
@@ -32,7 +30,6 @@ pub async fn get_notification_history(
                 .fetch_all(pool.get_ref()),
             );
 
-            // Await both notifications concurrently and handle potential errors
             let (like_notifications, comment_notifications) = match notifications_future.await {
                 Ok((likes, comments)) => (likes, comments),
                 Err(e) => {
@@ -41,7 +38,6 @@ pub async fn get_notification_history(
                 }
             };
 
-            // Collect all unique by_ids from both like and comment notifications
             let mut user_ids_set = HashSet::new();
             for notification in &like_notifications {
                 user_ids_set.insert(notification.by_id);
@@ -51,7 +47,6 @@ pub async fn get_notification_history(
             }
             let user_ids: Vec<i32> = user_ids_set.into_iter().collect();
 
-            // Fetch all relevant users in a single query
             let users = if !user_ids.is_empty() {
                 match get_users_by_ids(pool.get_ref(), &user_ids).await {
                     Ok(user_list) => user_list,
@@ -64,13 +59,10 @@ pub async fn get_notification_history(
                 vec![]
             };
 
-            // Create a map for quick user lookup
             let user_map: HashMap<i32, User> = users.into_iter().map(|u| (u.id, u)).collect();
 
-            // Initialize a vector to hold all combined notifications
             let mut combined_notifications = Vec::with_capacity(like_notifications.len() + comment_notifications.len());
 
-            // Process like notifications
             for like in like_notifications {
                 let user = user_map.get(&like.by_id);
                 combined_notifications.push(serde_json::json!({
@@ -86,7 +78,6 @@ pub async fn get_notification_history(
                 }));
             }
 
-            // Process comment notifications
             for comment in comment_notifications {
                 let user = user_map.get(&comment.by_id);
                 combined_notifications.push(serde_json::json!({
@@ -102,14 +93,12 @@ pub async fn get_notification_history(
                 }));
             }
 
-            // Optionally, sort the combined notifications by created_at descending
             combined_notifications.sort_by(|a, b| {
                 let a_time = a["created_at"].as_str().unwrap_or("");
                 let b_time = b["created_at"].as_str().unwrap_or("");
                 b_time.cmp(a_time)
             });
 
-            // Respond with the combined notifications
             HttpResponse::Ok().json(serde_json::json!({
                 "status": true,
                 "message": "Notifications fetched successfully",
@@ -131,7 +120,6 @@ pub struct User {
     pub avatar_link: Option<String>,
 }
 
-// Async function to get users by IDs in a single query
 async fn get_users_by_ids(pool: &PgPool, user_ids: &[i32]) -> Result<Vec<User>, sqlx::Error> {
     if user_ids.is_empty() {
         return Ok(vec![]);
