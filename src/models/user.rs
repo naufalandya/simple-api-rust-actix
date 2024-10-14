@@ -15,6 +15,7 @@ pub struct UserResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
+    pub id : i32,
     pub sub: String,  // User ID (subject)
     pub username: String,
     pub exp: usize,   // Expiry time
