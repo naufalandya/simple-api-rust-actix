@@ -7,11 +7,11 @@ pub struct UserResponse {
     pub status: u16,
 }
 
-#[derive(Deserialize)]
-pub struct CreateUser {
-    pub name: String,
-    pub age: i32, // Change this to i32
-}
+// #[derive(Deserialize)]
+// pub struct CreateUser {
+//     pub name: String,
+//     pub age: i32, // Change this to i32
+// }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
